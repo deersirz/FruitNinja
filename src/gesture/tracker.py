@@ -72,9 +72,9 @@ class GestureTracker:
             dy = curr_y - prev_y
             distance = np.sqrt(dx**2 + dy**2)
             
-            # 计算方向（角度）
+            # 计算方向（角度，反正切arctangent）
             if distance > 0:
-                angle = np.arctan2(dy, dx) * 180 / np.pi
+                angle = np.arctan2(dy, dx) * 180 / np.pi  # arctangent
             else:
                 angle = 0.0
             
@@ -120,3 +120,24 @@ class GestureTracker:
             return dx, dy
         
         return 0, 0
+
+    def is_swing_gesture(self, speed_threshold=40, min_trajectory_points=5):
+        """
+        判断是否为挥砍手势（快速挥动）
+        Args:
+            speed_threshold (float): 速度阈值，超过则判定为挥砍
+            min_trajectory_points (int): 最少轨迹点数
+        Returns:
+            bool: 是否为挥砍手势
+        """
+        trajectory = self.get_trajectory()
+        if len(trajectory) < min_trajectory_points:
+            return False
+        # 计算最近一段轨迹的平均速度
+        total_dist = 0
+        for i in range(1, len(trajectory)):
+            dx = trajectory[i]['x'] - trajectory[i-1]['x']
+            dy = trajectory[i]['y'] - trajectory[i-1]['y']
+            total_dist += np.sqrt(dx**2 + dy**2)
+        avg_speed = total_dist / (len(trajectory)-1)
+        return avg_speed > speed_threshold
