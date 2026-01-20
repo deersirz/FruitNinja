@@ -1,0 +1,21 @@
+# 项目依赖文件
+
+# Python版本要求
+# Python 3.8+
+
+# 核心依赖
+mediapipe==0.10.14
+opencv-python==4.8.1.78
+pygame==2.5.2
+numpy==1.26.4
+
+# 可选依赖
+# 用于打包发布
+pyinstaller==6.0.0
+
+# 用于代码格式化和检查
+black==24.2.0
+flake8==6.1.0
+
+# 用于测试
+pytest==7.4.4
