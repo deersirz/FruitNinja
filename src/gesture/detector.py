@@ -4,8 +4,15 @@
 """
 
 import cv2
-import mediapipe as mp
 import numpy as np
+
+# 兼容不同版本的 MediaPipe 导入路径
+try:
+    import mediapipe as mp
+    MP_HANDS = mp.solutions.hands  # 旧版/经典路径
+except Exception:
+    # 新版可能没有 mp.solutions，改用 python.solutions
+    from mediapipe.python.solutions import hands as MP_HANDS
 
 
 class HandDetector:
@@ -23,8 +30,7 @@ class HandDetector:
             height (int): 摄像头高度
         """
         # 初始化MediaPipe Hands
-        self.mp_hands = mp.solutions.hands
-        self.hands = self.mp_hands.Hands(
+        self.hands = MP_HANDS.Hands(
             static_image_mode=False,
             max_num_hands=1,
             min_detection_confidence=0.7,
