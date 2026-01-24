@@ -124,7 +124,7 @@ class GameEngine:
                 # 处理碰撞
                 for fruit in collided_fruits:
                     if not fruit.sliced:
-                        fruit.slice()
+                        fruit.slice(current_time)
                         self.score_manager.update_score(fruit)
                         self.audio_manager.play_sound('slice')
                         
@@ -132,7 +132,13 @@ class GameEngine:
                         self.renderer.create_slice_effect(fruit.x, fruit.y, fruit.color)
         
         # 更新水果管理器
-        self.fruit_manager.update(dt, current_time)
+        self.fruit_manager.update(dt, current_time, self.physics_engine)
+        
+        # 检查并处理超出屏幕的水果
+        for fruit in self.fruit_manager.get_fruits()[:]:
+            if fruit.is_off_screen() and not fruit.sliced:
+                self.score_manager.increment_missed_fruits()
+                self.fruit_manager.remove_fruit(fruit)
         
         # 更新分数管理器
         self.score_manager.update_game_time(dt)

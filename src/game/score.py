@@ -36,7 +36,7 @@ class ScoreManager:
         self.combo += 1
         
         # 计算连击倍数
-        combo_multiplier = 1 + (self.combo - 1) * 0.1
+        combo_multiplier = 1 + (self.combo - 1) * GameConfig.COMBO_MULTIPLIER
         
         # 计算最终分数
         final_score = int(fruit_score * combo_multiplier)

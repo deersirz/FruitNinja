@@ -1,9 +1,10 @@
 """
 水果模块
-定义水果对象和水果管理器
+define水果对象和水果管理器
 """
 
 import random
+import math
 from game.config import GameConfig
 from game.physics import PhysicsEngine
 
@@ -41,23 +42,29 @@ class Fruit:
         self.sliced = False
         self.sliced_time = 0
         
-    def update(self, dt):
+    def update(self, dt, physics_engine=None):
         """
         更新水果状态
         
         Args:
             dt (float): 时间步长（秒）
+            physics_engine (PhysicsEngine, optional): 物理引擎实例
         """
         if not self.sliced:
-            # 更新位置
-            self.x += self.velocity_x * dt
-            self.y += self.velocity_y * dt
-            
-            # 应用重力
-            self.velocity_y += GameConfig.GRAVITY * dt
-            
-            # 更新旋转
-            self.rotation += self.angular_velocity * dt
+            if physics_engine:
+                # 使用物理引擎更新
+                physics_engine.apply_physics(self, dt)
+            else:
+                # 内置物理更新（备用）
+                # 更新位置
+                self.x += self.velocity_x * dt
+                self.y += self.velocity_y * dt
+                
+                # 应用重力
+                self.velocity_y += GameConfig.GRAVITY * dt
+                
+                # 更新旋转
+                self.rotation += self.angular_velocity * dt
             
     def draw(self, surface):
         """
@@ -69,11 +76,15 @@ class Fruit:
         # 这里将在renderer.py中实现具体的绘制逻辑
         pass
     
-    def slice(self):
+    def slice(self, slice_time=0):
         """
         标记水果为已切割
+        
+        Args:
+            slice_time (float, optional): 切割时间（秒）
         """
         self.sliced = True
+        self.sliced_time = slice_time
         
     def is_off_screen(self):
         """
@@ -103,13 +114,14 @@ class FruitManager:
         self.last_spawn_time = 0
         self.fruit_types = GameConfig.FRUIT_TYPES
         
-    def update(self, dt, current_time):
+    def update(self, dt, current_time, physics_engine=None):
         """
         更新水果管理器状态
         
         Args:
             dt (float): 时间步长（秒）
             current_time (float): 当前时间（秒）
+            physics_engine (PhysicsEngine, optional): 物理引擎实例
         """
         # 生成新水果
         if current_time - self.last_spawn_time > self.spawn_rate:
@@ -118,10 +130,10 @@ class FruitManager:
         
         # 更新水果状态
         for fruit in self.fruits[:]:
-            fruit.update(dt)
+            fruit.update(dt, physics_engine)
             
-            # 移除超出屏幕的水果
-            if fruit.is_off_screen():
+            # 移除已切割的水果（延迟移除，以便特效显示）
+            if fruit.sliced and current_time - fruit.sliced_time > 1.0:
                 self.fruits.remove(fruit)
     
     def spawn_fruit(self):
@@ -166,5 +178,4 @@ class FruitManager:
         self.fruits.clear()
 
 
-# 导入math模块
-import math
+
