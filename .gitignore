@@ -1,0 +1,54 @@
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Build files
+build/
+dist/
+*.egg-info/
+
+# Log files
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Package manager
+pip-wheel-metadata/
+.pytype/
+
+# Audio files (if any)
+*.wav
+*.mp3
+*.ogg
+
+# Image files (if any)
+*.png
+*.jpg
+*.jpeg
+*.gif
