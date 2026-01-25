@@ -13,7 +13,8 @@ class GameEngine:
     """
     游戏引擎类
     """
-    def __init__(self, hand_detector, renderer, audio_manager, logger):
+    def __init__(self, hand_detector, renderer, logger):
+    #def __init__(self, hand_detector, renderer, audio_manager, logger):
         """
         初始化游戏引擎
         
@@ -25,7 +26,7 @@ class GameEngine:
         """
         self.hand_detector = hand_detector
         self.renderer = renderer
-        self.audio_manager = audio_manager
+        #self.audio_manager = audio_manager
         self.logger = logger
         
         # 使用游戏工厂创建所有模块
@@ -126,7 +127,7 @@ class GameEngine:
                     if not fruit.sliced:
                         fruit.slice(current_time)
                         self.score_manager.update_score(fruit)
-                        self.audio_manager.play_sound('slice')
+                        #self.audio_manager.play_sound('slice')
                         
                         # 创建切割特效
                         self.renderer.create_slice_effect(fruit.x, fruit.y, fruit.color)
@@ -179,6 +180,7 @@ class GameEngine:
             score = self.score_manager.get_score()
             max_combo = self.score_manager.get_max_combo()
             self.renderer.render_game_over_screen(score, max_combo)
+            self.renderer.clear_effects()
         
         # 渲染特效
         self.renderer.render_effects()
@@ -193,7 +195,7 @@ class GameEngine:
         self.game_state = 'playing'
         self.score_manager.reset()
         self.fruit_manager.clear_fruits()
-        self.audio_manager.play_sound('start')
+        #self.audio_manager.play_sound('start')
         self.logger.log("游戏开始")
     
     def pause_game(self):
@@ -201,7 +203,7 @@ class GameEngine:
         暂停游戏
         """
         self.game_state = 'paused'
-        self.audio_manager.play_sound('pause')
+        #self.audio_manager.play_sound('pause')
         self.logger.log("游戏暂停")
     
     def resume_game(self):
@@ -209,7 +211,7 @@ class GameEngine:
         恢复游戏
         """
         self.game_state = 'playing'
-        self.audio_manager.play_sound('resume')
+        # self.audio_manager.play_sound('resume')
         self.logger.log("游戏恢复")
     
     def end_game(self):
@@ -217,7 +219,7 @@ class GameEngine:
         结束游戏
         """
         self.game_state = 'game_over'
-        self.audio_manager.play_sound('game_over')
+        # self.audio_manager.play_sound('game_over')
         score = self.score_manager.get_score()
         self.logger.log(f"游戏结束，得分：{score}")
     

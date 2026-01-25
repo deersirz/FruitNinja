@@ -1,108 +1,106 @@
 """
 手部检测器模块
-集成MediaPipe Hands进行手部关键点检测
+兼容 MediaPipe 0.8.x (classic) 与 0.10+ (Tasks API)
 """
-
 import cv2
 import numpy as np
 
-# 兼容不同版本的 MediaPipe 导入路径
+# ------------------ 版本探测 ------------------
 try:
     import mediapipe as mp
-    MP_HANDS = mp.solutions.hands  # 旧版/经典路径
-except Exception:
-    # 新版可能没有 mp.solutions，改用 python.solutions
-    from mediapipe.python.solutions import hands as MP_HANDS
+    # 能 import solutions 说明是经典版
+    mp.solutions.hands
+    _USE_CLASSIC = True
+except (ImportError, AttributeError):
+    _USE_CLASSIC = False
+
+if not _USE_CLASSIC:
+    # 新版 Tasks 路径
+    from mediapipe.tasks import python as mp_tasks
+    from mediapipe.tasks.python import vision as mp_vision
+
+# （可选）把 drawing_utils 也一起拷到本地，方便画线
+# from drawing_utils import draw_landmarks   # 如需可视化可打开
 
 
 class HandDetector:
     """
     手部检测器类
-    使用MediaPipe Hands检测手部关键点
+    对外接口与旧版完全一致，内部自动选择 MediaPipe 实现
     """
-    
+
     def __init__(self, width=640, height=480):
-        """
-        初始化手部检测器
-        
-        Args:
-            width (int): 摄像头宽度
-            height (int): 摄像头高度
-        """
-        # 初始化MediaPipe Hands
-        self.hands = MP_HANDS.Hands(
-            static_image_mode=False,
-            max_num_hands=1,
-            min_detection_confidence=0.7,
-            min_tracking_confidence=0.5
-        )
-        
-        # 初始化摄像头
+        self.width, self.height = width, height
+
+        # 1. 初始化 MediaPipe Hands / HandLandmarker
+        if _USE_CLASSIC:
+            self.hands = mp.solutions.hands.Hands(
+                static_image_mode=False,
+                max_num_hands=1,
+                min_detection_confidence=0.7,
+                min_tracking_confidence=0.5
+            )
+        else:
+            base_options = mp_tasks.BaseOptions(
+                model_asset_path=r'src\gesture/hand_landmarker.task'  # 官方模型，第一次需要下载
+            )
+            options = mp_vision.HandLandmarkerOptions(
+                base_options=base_options,
+                num_hands=1,
+                min_hand_detection_confidence=0.7,
+                min_hand_presence_confidence=0.5,
+                min_tracking_confidence=0.5
+            )
+            self.landmarker = mp_vision.HandLandmarker.create_from_options(options)
+
+        # 2. 摄像头
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        
-        self.width = width
-        self.height = height
-        
+
+    # ---------------------------- 对外接口保持完全一致 ----------------------------
     def detect_hands(self, frame):
-        """
-        检测手部关键点
-        
-        Args:
-            frame (np.ndarray): 输入帧
-            
-        Returns:
-            dict: 检测结果，包含手部关键点坐标
-        """
-        # 转换为RGB格式
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
-        # 检测手部
-        results = self.hands.process(rgb_frame)
-        
+        """返回格式与旧版 100% 相同"""
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
         detection_result = {
             'has_hand': False,
             'landmarks': [],
             'frame': frame
         }
-        
-        # 如果检测到手部
-        if results.multi_hand_landmarks:
-            detection_result['has_hand'] = True
-            
-            for hand_landmarks in results.multi_hand_landmarks:
-                landmarks = []
-                for lm in hand_landmarks.landmark:
-                    # 转换为像素坐标
-                    x = int(lm.x * self.width)
-                    y = int(lm.y * self.height)
-                    landmarks.append({'x': x, 'y': y})
-                detection_result['landmarks'] = landmarks
-        
+
+        if _USE_CLASSIC:
+            results = self.hands.process(rgb)
+            if results.multi_hand_landmarks:
+                detection_result['has_hand'] = True
+                for hl in results.multi_hand_landmarks:
+                    detection_result['landmarks'] = [
+                        {'x': int(lm.x * self.width), 'y': int(lm.y * self.height)}
+                        for lm in hl.landmark
+                    ]
+        else:
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+            result = self.landmarker.detect(mp_image)
+            if result.hand_landmarks:
+                detection_result['has_hand'] = True
+                # 只取第一只手（num_hands=1）
+                landmarks = result.hand_landmarks[0]
+                detection_result['landmarks'] = [
+                    {'x': int(lm.x * self.width), 'y': int(lm.y * self.height)}
+                    for lm in landmarks
+                ]
         return detection_result
-    
+
     def get_frame(self):
-        """
-        获取摄像头帧
-        
-        Returns:
-            np.ndarray: 摄像头帧
-        """
         ret, frame = self.cap.read()
         if not ret:
             return None
-        
-        # 水平翻转帧
-        frame = cv2.flip(frame, 1)
-        return frame
-    
+        return cv2.flip(frame, 1)
+
     def close(self):
-        """
-        关闭摄像头
-        """
         if self.cap.isOpened():
             self.cap.release()
-        
-        # 关闭MediaPipe Hands
-        self.hands.close()
+        if _USE_CLASSIC:
+            self.hands.close()
+        else:
+            self.landmarker.close()

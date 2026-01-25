@@ -97,7 +97,7 @@ class SliceEffect:
         self.length = 80
         self.thickness = 3
     
-    def update(self, dt):
+    def update(self, dt:float):
         """
         更新切割效果
         

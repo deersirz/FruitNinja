@@ -10,11 +10,11 @@ import os
 # 添加src目录到Python路径
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-from game.engine import GameEngine
-from gesture.detector import HandDetector
-from ui.renderer import Renderer
-from audio.manager import AudioManager
-from utils.logger import Logger
+from src.game.engine import GameEngine
+from src.gesture.detector import HandDetector
+from src.ui.renderer import Renderer
+#from src.audio.manager import AudioManager
+from src.utils.logger import Logger
 
 
 def main():
@@ -28,8 +28,8 @@ def main():
         pygame.init()
         
         # 初始化音频管理器
-        audio_manager = AudioManager()
-        audio_manager.init()
+        #audio_manager = AudioManager()
+        #audio_manager.init()
         
         # 初始化手部检测器
         hand_detector = HandDetector(width=640, height=480)
@@ -41,7 +41,7 @@ def main():
         game_engine = GameEngine(
             hand_detector=hand_detector,
             renderer=renderer,
-            audio_manager=audio_manager,
+            #audio_manager=audio_manager,
             logger=logger
         )
         
@@ -57,7 +57,8 @@ def main():
             hand_detector.close()
         
         if 'audio_manager' in locals():
-            audio_manager.quit()
+            #audio_manager.quit()
+            pass
         
         pygame.quit()
         logger.log("游戏已退出")

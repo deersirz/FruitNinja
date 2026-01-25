@@ -29,8 +29,9 @@ class Fruit:
         self.color = GameConfig.FRUIT_COLORS.get(fruit_type, (255, 255, 255))
         
         # 随机速度和方向
-        angle = random.uniform(-45, 45)
-        speed = GameConfig.FRUIT_VELOCITY
+        angle_range = 15
+        angle = random.uniform(90 - angle_range, 90 + angle_range)
+        speed = GameConfig.FRUIT_VELOCITY + 400
         self.velocity_x = speed * math.cos(math.radians(angle))
         self.velocity_y = -speed * math.sin(math.radians(angle))
         
