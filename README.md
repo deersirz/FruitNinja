@@ -29,11 +29,14 @@ fruit-ninja/
 ├── main.py                # 游戏主入口文件
 ├── requirements.txt       # 项目依赖文件
 ├── README.md              # 项目说明文档
+├── 项目架构.md             # 架构设计文档
 ├── assets/                # 静态资源目录
+│   ├── fonts/             # 字体资源
+│   │   ├── Artier.ttf     # 主要游戏字体
+│   │   └── NotoSansSC.ttf # 中文字体
 │   ├── images/            # 图片资源
-│   │   ├── fruits/        # 水果图片
-│   │   ├── backgrounds/   # 背景图片
-│   │   └── icons/         # 图标图片
+│   │   ├── title.png      # 游戏标题图片
+│   │   └── background.jpg # 游戏背景图片
 │   └── sounds/            # 音频资源
 │       ├── effects/       # 音效文件
 │       └── music/         # 背景音乐
@@ -42,7 +45,8 @@ fruit-ninja/
     │   ├── __init__.py     # 模块初始化文件
     │   ├── detector.py     # MediaPipe Hands集成
     │   ├── tracker.py      # 手势轨迹跟踪
-    │   └── mapper.py       # 手势与操作映射
+    │   ├── mapper.py       # 手势与操作映射
+    │   └── hand_landmarker.task # MediaPipe手部检测模型
     ├── game/              # 游戏核心模块
     │   ├── __init__.py     # 模块初始化文件
     │   ├── engine.py       # 游戏引擎
@@ -50,8 +54,11 @@ fruit-ninja/
     │   ├── physics.py      # 物理系统
     │   ├── collision.py    # 碰撞检测
     │   ├── score.py        # 计分系统
-    │   └── config.py       # 游戏配置参数
+    │   ├── config.py       # 游戏配置参数
+    │   └── factory.py      # 游戏模块工厂
     ├── ui/                # 界面模块
+    │   ├── resource/       # UI资源目录
+    │   │   └── font/        # 字体资源
     │   ├── __init__.py     # 模块初始化文件
     │   ├── renderer.py     # PyGame渲染器
     │   ├── effects.py      # 视觉效果
@@ -60,13 +67,14 @@ fruit-ninja/
     ├── audio/             # 音频模块
     │   ├── __init__.py     # 模块初始化文件
     │   ├── manager.py      # 音频管理器
-    │   ├── sounds.py       # 音效定义
-    │   └── feedback.py     # 游戏反馈
+    │   ├── feedback.py     # 游戏反馈机制
+    │   └── sounds.py       # 音效定义
     └── utils/             # 工具模块
         ├── __init__.py     # 模块初始化文件
         ├── camera.py       # 摄像头工具
         ├── timer.py        # 计时器工具
-        └── logger.py       # 日志工具
+        ├── logger.py       # 日志工具
+        └── resource.py     # 资源管理
 ```
 
 ## 安装说明
