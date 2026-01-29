@@ -43,12 +43,12 @@ pip-wheel-metadata/
 .pytype/
 
 # Audio files (if any)
-*.wav
-*.mp3
-*.ogg
+# *.wav
+# *.mp3
+# *.ogg
 
 # Image files (if any)
-*.png
-*.jpg
-*.jpeg
-*.gif
+# *.png
+# *.jpg
+# *.jpeg
+# *.gif
