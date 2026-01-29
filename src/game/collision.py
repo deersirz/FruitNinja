@@ -93,12 +93,13 @@ class CollisionDetector:
         # 如果距离小于半径，则碰撞
         return distance_sq <= radius**2
     
-    def detect_multiple_collisions(self, gesture_trajectory, fruits):
+    def detect_multiple_collisions(self, gesture_trajectory, middle_finger_trajectory, fruits):
         """
         检测手势轨迹与多个水果的碰撞
         
         Args:
             gesture_trajectory (list): 手势轨迹点列表
+            middle_finger_trajectory (list): 中指轨迹点列表
             fruits (list): 水果列表
             
         Returns:
@@ -107,10 +108,44 @@ class CollisionDetector:
         collided_fruits = []
         
         for fruit in fruits:
-            if self.detect_collision(gesture_trajectory, fruit):
-                collided_fruits.append(fruit)
+            if fruit.type == 'watermelon':
+                # 西瓜需要食指和中指同时滑动才能切割
+                if self.detect_double_gesture_collision(gesture_trajectory, middle_finger_trajectory, fruit):
+                    collided_fruits.append(fruit)
+            else:
+                # 其他水果只需要单个手势轨迹即可切割
+                if self.detect_collision(gesture_trajectory, fruit):
+                    collided_fruits.append(fruit)
         
         return collided_fruits
+    
+    def detect_double_gesture_collision(self, index_finger_trajectory, middle_finger_trajectory, fruit):
+        """
+        检测双手势轨迹（食指和中指）与水果的碰撞
+        
+        Args:
+            index_finger_trajectory (list): 食指轨迹点列表
+            middle_finger_trajectory (list): 中指轨迹点列表
+            fruit (Fruit): 水果对象
+            
+        Returns:
+            bool: 是否碰撞
+        """
+        if fruit.sliced:
+            return False
+        
+        # 要求两个手指都有轨迹
+        if len(index_finger_trajectory) < 2 or len(middle_finger_trajectory) < 2:
+            return False
+        
+        # 检测食指轨迹与水果碰撞
+        index_collision = self.detect_collision(index_finger_trajectory, fruit)
+        
+        # 检测中指轨迹与水果碰撞
+        middle_collision = self.detect_collision(middle_finger_trajectory, fruit)
+        
+        # 西瓜需要两个手指都碰撞才能切割
+        return index_collision and middle_collision
     
     def calculate_collision_point(self, line_start, line_end, circle_center, radius):
         """

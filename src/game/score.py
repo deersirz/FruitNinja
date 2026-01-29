@@ -19,6 +19,7 @@ class ScoreManager:
         self.max_combo = 0
         self.missed_fruits = 0
         self.game_time = 0
+        self.game_duration = GameConfig.DEFAULT_GAME_DURATION
         self.game_over = False
         self.start_time = 0
     
@@ -65,6 +66,15 @@ class ScoreManager:
         if self.missed_fruits >= GameConfig.MAX_MISSED_FRUITS:
             self.game_over = True
     
+    def set_game_duration(self, duration):
+        """
+        设置游戏时长
+        
+        Args:
+            duration (int): 游戏时长（秒）
+        """
+        self.game_duration = duration
+    
     def update_game_time(self, dt):
         """
         更新游戏时间
@@ -75,7 +85,7 @@ class ScoreManager:
         self.game_time += dt
         
         # 检查游戏是否结束
-        if self.game_time >= GameConfig.GAME_DURATION:
+        if self.game_time >= self.game_duration:
             self.game_over = True
     
     def reset(self):
@@ -87,6 +97,7 @@ class ScoreManager:
         self.max_combo = 0
         self.missed_fruits = 0
         self.game_time = 0
+        self.game_duration = GameConfig.DEFAULT_GAME_DURATION
         self.game_over = False
         self.start_time = 0
     

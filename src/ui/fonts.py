@@ -7,6 +7,7 @@ import pygame
 import os
 
 art_font = 'Artier'
+sans_font = 'NotoSansSC'  # 等线字体
 
 
 class FontManager:
@@ -30,6 +31,14 @@ class FontManager:
             'text': 30,
             'small': 20
         }
+        
+        # 中文字体备选列表
+        self.chinese_fonts = [
+            sans_font,  # 首选等线字体
+            'simsun',   # 宋体
+            'simhei',   # 黑体
+            'microsoftyahei'  # 微软雅黑
+        ]
     
     def get_font(self, size, font_name=None):
         """
@@ -43,7 +52,7 @@ class FontManager:
             pygame.font.Font: 字体对象
         """
         # 生成字体键
-        font_key = f"{font_name}_{size}" if font_name else f"default_{size}"
+        font_key = f"{font_name}_{size}" if font_name else f"{art_font}_{size}"
         
         # 如果字体已缓存，直接返回
         if font_key in self.fonts:
@@ -53,26 +62,68 @@ class FontManager:
         try:
             if font_name:
                 # 尝试加载指定字体
-                font_path = os.path.join('assets', 'fonts', f'{font_name}.ttf')
-                if os.path.exists(font_path):
-                    font = pygame.font.Font(font_path, size)
-                else:
-                    # 如果指定字体不存在，使用默认字体
-                    font = pygame.font.Font(None, size)
+                font = self._load_specific_font(font_name, size)
             else:
-                # 使用默认字体
-                font = pygame.font.Font(None, size)
+                # 默认使用Artier字体
+                font = self._load_specific_font(art_font, size)
             
             # 缓存字体
             self.fonts[font_key] = font
             
             return font
         except Exception as e:
-            # 如果加载失败，使用默认字体
+            # 如果加载失败，使用Artier字体作为备选
             print(f"Failed to load font: {e}")
-            font = pygame.font.Font(None, size)
+            font = self._load_specific_font(art_font, size)
             self.fonts[font_key] = font
             return font
+    
+    def _load_specific_font(self, font_name, size):
+        """
+        加载指定字体，实现字体回退机制
+        
+        Args:
+            font_name (str): 字体名称
+            size (int): 字体大小
+            
+        Returns:
+            pygame.font.Font: 字体对象
+        """
+        # 尝试从多个位置加载字体文件
+        font_paths = [
+            os.path.join('assets', 'fonts', f'{font_name}.ttf'),
+            os.path.join('src', 'ui', 'resource', 'font', f'{font_name}.ttf')
+        ]
+        
+        # 尝试加载指定字体
+        for font_path in font_paths:
+            if os.path.exists(font_path):
+                try:
+                    return pygame.font.Font(font_path, size)
+                except Exception:
+                    pass
+        
+        # 如果是中文字体，尝试备选字体
+        if font_name == sans_font:
+            for alt_font in self.chinese_fonts[1:]:
+                try:
+                    # 尝试系统字体
+                    font = pygame.font.SysFont(alt_font, size)
+                    if font is not None:
+                        return font
+                except Exception:
+                    pass
+        
+        # 尝试系统默认字体
+        try:
+            font = pygame.font.SysFont(None, size)
+            if font is not None:
+                return font
+        except Exception:
+            pass
+        
+        # 最后使用pygame默认字体
+        return pygame.font.Font(None, size)
     
     def get_title_font(self):
         """
@@ -123,7 +174,8 @@ class FontManager:
         Returns:
             pygame.Surface: 渲染后的文本表面
         """
-        font = self.get_font(size, font_name)
+        # 统一使用Artier字体，无论是否包含中文字符
+        font = self.get_font(size, font_name or art_font)
         return font.render(text, True, color)
     
     def render_title(self, text, color=(255, 255, 255)):
@@ -150,7 +202,7 @@ class FontManager:
         Returns:
             pygame.Surface: 渲染后的文本表面
         """
-        return self.render_text(text, self.default_sizes['subtitle'], color)
+        return self.render_text(text, self.default_sizes['subtitle'], color, art_font)
     
     def render_text_normal(self, text, color=(255, 255, 255)):
         """
@@ -163,7 +215,7 @@ class FontManager:
         Returns:
             pygame.Surface: 渲染后的文本表面
         """
-        return self.render_text(text, self.default_sizes['text'], color)
+        return self.render_text(text, self.default_sizes['text'], color, art_font)
     
     def render_small_text(self, text, color=(255, 255, 255)):
         """
@@ -176,15 +228,14 @@ class FontManager:
         Returns:
             pygame.Surface: 渲染后的文本表面
         """
-        return self.render_text(text, self.default_sizes['small'], color)
+        return self.render_text(text, self.default_sizes['small'], color, art_font)
     
     def render_score_life_text(self, text, color=(255, 255, 255)):
         '''
         专门渲染分数和生命
         by Chaistr
         '''
-        return self.render_text(text, self.default_sizes['text'], color, art_font)
-        pass
+        return self.render_text(str(text), self.default_sizes['text'], color, art_font)
 
     def clear_cache(self):
         """

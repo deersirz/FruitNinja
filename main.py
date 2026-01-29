@@ -34,8 +34,8 @@ def main():
         # 初始化手部检测器
         hand_detector = HandDetector(width=640, height=480)
         
-        # 初始化渲染器
-        renderer = Renderer(width=800, height=600)
+        # 初始化渲染器，传递手部检测器实例
+        renderer = Renderer(width=800, height=600, hand_detector=hand_detector)
         
         # 初始化游戏引擎
         game_engine = GameEngine(
