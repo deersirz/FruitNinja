@@ -384,6 +384,9 @@ class FruitManager:
         self.guide_fruits = ['apple', 'apple', 'strawberry', 'strawberry', 'banana', 'banana', 'watermelon', 'watermelon', 'bomb']
         self.guide_index = 0
         
+        # 游戏开始时间，用于延迟水果生成
+        self.game_start_time = 0
+        
     def update(self, dt, current_time, physics_engine=None):
         """
         更新水果管理器状态
@@ -393,6 +396,10 @@ class FruitManager:
             current_time (float): 当前时间（秒）
             physics_engine (PhysicsEngine, optional): 物理引擎实例
         """
+        # 初始化游戏开始时间
+        if self.game_start_time == 0:
+            self.game_start_time = current_time
+        
         # 初始化引导开始时间
         if self.guide_phase and self.guide_start_time == 0:
             self.guide_start_time = current_time
@@ -402,8 +409,8 @@ class FruitManager:
             self.guide_phase = False
             print("引导阶段结束，开始正常水果生成")
         
-        # 生成新水果
-        if current_time - self.last_spawn_time > self.spawn_rate:
+        # 生成新水果（延迟2秒开始）
+        if current_time - self.game_start_time >= 2 and current_time - self.last_spawn_time > self.spawn_rate:
             if self.guide_phase and self.guide_index < len(self.guide_fruits):
                 # 引导阶段：按顺序生成特定水果
                 self.spawn_guide_fruit()

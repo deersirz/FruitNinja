@@ -36,14 +36,16 @@ class UILayout:
             'game_over_score': (self.width // 2, self.height // 2),
             'game_over_combo': (self.width // 2, self.height // 2 + 40),
             'game_over_restart': (self.width // 2, self.height // 2 + 120),
+            'game_over_quit': (self.width // 2, self.height // 2 + 180),
             'ready_title': (self.width // 2, self.height // 3),
-            'ready_start': (self.width // 2, self.height // 2 + 40),
+            'ready_start': (self.width // 2, self.height // 3 + 100),
             'pause_title': (self.width // 2, self.height // 3),
             'pause_resume': (self.width // 2, self.height // 2 + 40),
             'title_screen_title': (self.width // 2, self.height // 3),
-            'title_screen_start': (self.width // 2, self.height // 2 + 100),
-            'title_screen_duration': (50, 50),
+            'title_screen_start': (self.width // 2, self.height // 3 + 100),
+            'title_screen_duration': (50, 30),
             'title_screen_rules': (self.width - 180, self.height - 60),
+            'title_screen_quit': (self.width - 180, self.height - 120),
             'camera_preview': (10, self.height - 150)  # 左下角摄像头预览窗口位置，避免与血量显示冲突
         }
 
@@ -103,7 +105,7 @@ class UILayout:
         else:
             surface.fill(GameConfig.BACKGROUND_COLOR)
     
-    def draw_ui(self, surface, score, combo, missed, game_time):
+    def draw_ui(self, surface, score, combo, missed, game_time, game_duration):
         """
         绘制游戏UI元素
         
@@ -113,6 +115,7 @@ class UILayout:
             combo (int): 当前连击数
             missed (int): 错过的水果数
             game_time (float): 游戏时间
+            game_duration (int): 游戏时长
         """
         # 绘制分数
         score_text = f"Score: {score}"
@@ -128,7 +131,7 @@ class UILayout:
             surface.blit(combo_surface, combo_rect)
         
         # 绘制生命，使用心形图标
-        lives = int(GameConfig.MAX_MISSED_FRUITS) - int(missed)
+        lives = int(GameConfig.INITIAL_LIVES) - int(missed)
         heart_icon = resource_manager.load_image('heart.png')
         
         if heart_icon:
@@ -149,7 +152,7 @@ class UILayout:
             surface.blit(missed_surface, missed_rect)
         
         # 绘制游戏时间
-        time_left = max(0, GameConfig.DEFAULT_GAME_DURATION - game_time)
+        time_left = max(0, game_duration - game_time)
         time_text = f"Time: {int(time_left)}s"
         time_surface = self.font_manager.render_text_normal(time_text, GameConfig.WHITE)
         time_rect = time_surface.get_rect(center=self.ui_positions['time'])
@@ -167,18 +170,17 @@ class UILayout:
         Args:
             surface (pygame.Surface): 绘制表面
         """
-        # 绘制游戏时长选择
-        self.draw_duration_selector(surface)
-        
         # 绘制开始按钮
         self.draw_start_button(surface)
         
+        # 绘制退出按钮
+        self.draw_quit_button(surface, 'title_screen_quit')
+        
+        # 绘制时间选择器
+        self.draw_duration_selector(surface)
+        
         # 绘制规则按钮
         self.draw_rules_button(surface)
-        
-        # 绘制规则界面
-        if self.show_rules:
-            self.draw_rules_overlay(surface)
     
     def draw_duration_selector(self, surface):
         """
@@ -198,8 +200,8 @@ class UILayout:
         mouse_pressed = pygame.mouse.get_pressed()
         
         for i, duration in enumerate(duration_options):
-            button_x = 50 + i * 110
-            button_rect = pygame.Rect(button_x, duration_button_y, 100, 50)
+            button_x = 50 + i * 90
+            button_rect = pygame.Rect(button_x, duration_button_y, 80, 40)
             
             # 检查鼠标位置
             is_hovered = button_rect.collidepoint(mouse_pos)
@@ -230,7 +232,7 @@ class UILayout:
             surface (pygame.Surface): 绘制表面
         """
         button_x = self.width // 2 - 100
-        button_y = self.height // 2 + 100
+        button_y = self.height // 3 + 50
         rect = pygame.Rect(button_x, button_y, 200, 200)
         mouse_pos = pygame.mouse.get_pos()
         
@@ -277,6 +279,80 @@ class UILayout:
         if is_hovered and pygame.mouse.get_pressed()[0]:
             self.show_rules = True
     
+    def draw_quit_button(self, surface, position_key):
+        """
+        绘制退出按钮
+        
+        Args:
+            surface (pygame.Surface): 绘制表面
+            position_key (str): 位置键名
+        """
+        # 对于开始界面，将退出按钮放置于开始游戏按钮的正下方，确保沿同一垂直中轴对称
+        if position_key == 'title_screen_quit':
+            button_x = self.width // 2 - 45
+            button_y = self.height // 3 + 280  
+            rect = pygame.Rect(button_x, button_y, 160, 45)
+        else:
+            # 对于其他界面，使用原来的位置
+            pos = self.ui_positions[position_key]
+            rect = pygame.Rect(pos[0] - 80, pos[1] - 20, 160, 45)
+        
+        # 检查鼠标位置
+        mouse_pos = pygame.mouse.get_pos()
+        is_hovered = rect.collidepoint(mouse_pos)
+        
+        # 无透明边框，仅使用颜色变化显示状态
+        if is_hovered:
+            # 鼠标悬停时使用红色
+            text_color = GameConfig.RED
+        else:
+            # 正常状态使用白色
+            text_color = GameConfig.WHITE
+        
+        # 绘制文本
+        text = self.font_manager.render_text_normal('Quit', text_color)
+        surface.blit(text, (rect.x + 20, rect.y + 10))
+        
+        # 检查点击
+        if is_hovered and pygame.mouse.get_pressed()[0]:
+            pygame.quit()
+            exit()
+    
+    def draw_text_button(self, surface, text, x, y, width, height, hover_color=GameConfig.GOLD, normal_color=GameConfig.WHITE):
+        """
+        绘制文本按钮
+        
+        Args:
+            surface (pygame.Surface): 绘制表面
+            text (str): 按钮文本
+            x (int): 按钮X坐标
+            y (int): 按钮Y坐标
+            width (int): 按钮宽度
+            height (int): 按钮高度
+            hover_color (tuple): 悬停时的颜色
+            normal_color (tuple): 正常状态的颜色
+            
+        Returns:
+            bool: 按钮是否被点击
+        """
+        rect = pygame.Rect(x, y, width, height)
+        mouse_pos = pygame.mouse.get_pos()
+        is_hovered = rect.collidepoint(mouse_pos)
+        
+        # 无透明边框，仅使用颜色变化显示状态
+        if is_hovered:
+            text_color = hover_color
+        else:
+            text_color = normal_color
+        
+        # 绘制文本
+        button_text = self.font_manager.render_text_normal(text, text_color)
+        surface.blit(button_text, (rect.x + 20, rect.y + 10))
+        
+        # 检查点击
+        is_clicked = is_hovered and pygame.mouse.get_pressed()[0]
+        return is_clicked
+    
     def draw_rules_overlay(self, surface):
         """
         绘制规则覆盖层
@@ -293,26 +369,41 @@ class UILayout:
         # 绘制规则文本
         rules = [
             "=== Game Rules ===",
-            "",
-            "[Slicing Methods]",
-            "Apple/Strawberry: Single finger slice (+10 points)",
-            "Watermelon/Peach: Double finger slice (+30 points)",
-            "Banana: Horizontal slice from left to right (+50 points + slow motion)",
-            "",
+            "[Cutting Method]",  # 移除主标题后的空行
+            "Swipe your hand across the screen to cut fruits",
+            "Watermelon: Requires a two-finger swipe",
+            "Other fruits: Normal single-finger swipe works",
+            "[Scoring]",
+            "Watermelon: 20 points",
+            "All other fruits: 10 points",      
+            "[Combo System]",
+            "Each consecutive fruit sliced increases combo",
+            "Combo bonus: +5 points per combo",
+            "Reset combo when fruit falls off screen",
             "[Bombs]",
-            "Open your palm to block bombs",
             "Don't slice bombs (-1 life)",
+            "[Lives]",
+            "Initial lives: 3",
+            "Lose 1 life when slicing bombs",
             "",
             "Click anywhere to close"
         ]
         
-        y = 100
+        y = 60
         for line in rules:
             color = GameConfig.GOLD if "===" in line else GameConfig.BLUE if "[" in line else GameConfig.WHITE
-            text = self.font_manager.render_text_normal(line, color)
+            
+            # 根据文本类型使用不同的字体大小
+            if "===" in line:
+                text = self.font_manager.render_text(line, 40, color)  # 减小主标题字体大小
+            elif "[" in line:
+                text = self.font_manager.render_text_normal(line, color)
+            else:
+                text = self.font_manager.render_small_text(line, color)
+            
             rect = text.get_rect(center=(self.width // 2, y))
             surface.blit(text, rect)
-            y += 40
+            y += 35  # 调整行间距，适应较小的字体
     
     def draw_game_over_screen(self, surface, score, max_combo, lives, end_reason):
         """
@@ -328,7 +419,7 @@ class UILayout:
         # 绘制最终分数
         score_text = f"Final Score: {score}"
         score_surface = self.font_manager.render_text_normal(score_text, GameConfig.WHITE)
-        score_rect = score_surface.get_rect(center=(self.width // 2, self.height // 2 - 50))
+        score_rect = score_surface.get_rect(center=(self.width // 2, self.height // 2 - 60))
         surface.blit(score_surface, score_rect)
         
         # 绘制结束原因
@@ -341,8 +432,22 @@ class UILayout:
         # 绘制时长选择
         self.draw_duration_selector(surface)
         
-        # 绘制重试按钮
-        self.draw_start_button(surface)
+        # 绘制new game按钮和quit按钮，在同一水平线上分居于两端
+        button_y = self.height // 2 + 120
+        
+        # 绘制new game按钮（左侧）
+        new_game_clicked = self.draw_text_button(surface, "New Game", 50, button_y, 160, 45)
+        
+        # 绘制quit按钮（右侧）
+        quit_clicked = self.draw_text_button(surface, "Quit", self.width - 210, button_y, 160, 45, GameConfig.RED, GameConfig.WHITE)
+        
+        # 处理quit按钮点击
+        if quit_clicked:
+            import pygame
+            pygame.quit()
+            exit()
+        
+        return new_game_clicked
     
     def draw_ready_screen(self, surface):
         """

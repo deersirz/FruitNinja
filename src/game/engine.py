@@ -333,24 +333,34 @@ class GameEngine:
                     if self.renderer.layout.get_show_rules():
                         self.renderer.layout.set_show_rules(False)
                     else:
-                        # 检查开始按钮点击
-                        start_button_rect = pygame.Rect(
-                            GameConfig.WINDOW_WIDTH // 2 - 100,
-                            GameConfig.WINDOW_HEIGHT // 2 + 100,
-                            200,
-                            200
+                        # 检查规则按钮点击
+                        rules_button_rect = pygame.Rect(
+                            GameConfig.WINDOW_WIDTH - 180,
+                            GameConfig.WINDOW_HEIGHT - 60,
+                            160,
+                            45
                         )
-                        if start_button_rect.collidepoint(mouse_pos):
-                            self.start_countdown()
+                        if rules_button_rect.collidepoint(mouse_pos):
+                            self.renderer.layout.set_show_rules(True)
+                        else:
+                            # 检查开始按钮点击
+                            start_button_rect = pygame.Rect(
+                                GameConfig.WINDOW_WIDTH // 2 - 100,
+                                GameConfig.WINDOW_HEIGHT // 3 - 30,
+                                200,
+                                200
+                            )
+                            if start_button_rect.collidepoint(mouse_pos):
+                                self.start_countdown()
                 elif self.game_state == GameConfig.GAME_STATES['GAME_OVER']:
-                    # 检查开始按钮点击
-                    start_button_rect = pygame.Rect(
-                        GameConfig.WINDOW_WIDTH // 2 - 100,
-                        GameConfig.WINDOW_HEIGHT // 2 + 100,
-                        200,
-                        200
+                    # 检查new game按钮点击（左侧）
+                    new_game_rect = pygame.Rect(
+                        50,
+                        GameConfig.WINDOW_HEIGHT // 2 + 120,
+                        160,
+                        45
                     )
-                    if start_button_rect.collidepoint(mouse_pos):
+                    if new_game_rect.collidepoint(mouse_pos):
                         self.reset_game()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
@@ -472,6 +482,8 @@ class GameEngine:
             if fruit.is_off_screen() and not fruit.sliced:
                 # 移除水果，但不移除生命值
                 self.fruit_manager.remove_fruit(fruit)
+                # 水果掉出屏幕，重置连击数
+                self.score_manager.reset_combo()
         
         # 更新分数管理器
         self.score_manager.update_game_time(dt)
@@ -503,7 +515,7 @@ class GameEngine:
             if not self.camera_preview_ready:
                 self.render_camera_loading_status()
         elif self.game_state == GameConfig.GAME_STATES['COUNTDOWN']:
-            self.renderer.render_countdown_screen(5 - int(time.time() - self.countdown_start_time))
+            self.renderer.render_countdown_screen(3 - int(time.time() - self.countdown_start_time))
             
             # 显示摄像头加载状态
             if not self.camera_preview_ready:
@@ -518,8 +530,9 @@ class GameEngine:
             combo = self.score_manager.get_combo()
             missed = self.score_manager.get_missed_fruits()
             game_time = self.score_manager.get_game_time()
+            game_duration = self.score_manager.game_duration
             
-            self.renderer.render_ui(score, combo, missed, game_time)
+            self.renderer.render_ui(score, combo, missed, game_time, game_duration)
         elif self.game_state == 'paused':
             self.renderer.render_pause_screen()
         elif self.game_state == GameConfig.GAME_STATES['GAME_OVER']:
@@ -589,7 +602,9 @@ class GameEngine:
         # 绘制加载状态文本
         font = pygame.font.Font(None, 36)
         progress_text = font.render(f"{self.init_message}", True, GameConfig.WHITE)
-        text_rect = progress_text.get_rect(center=(self.renderer.width // 2, self.renderer.height // 2))
+        # 将文本整体向上移动，定位在距离顶部1/3高度处
+        text_y = self.renderer.height // 3
+        text_rect = progress_text.get_rect(center=(self.renderer.width // 2, text_y))
         self.renderer.screen.blit(progress_text, text_rect)
         
         # 绘制游戏相关说明文本
@@ -603,12 +618,12 @@ class GameEngine:
         
         # 绘制说明文本
         instruction_font = pygame.font.Font(None, 24)
-        y_offset = 100
+        y_offset = 60
         for instruction in instructions:
             instruction_text = instruction_font.render(instruction, True, GameConfig.GOLD)
-            instruction_rect = instruction_text.get_rect(center=(self.renderer.width // 2, self.renderer.height // 2 + y_offset))
+            instruction_rect = instruction_text.get_rect(center=(self.renderer.width // 2, text_y + y_offset))
             self.renderer.screen.blit(instruction_text, instruction_rect)
-            y_offset += 40
+            y_offset += 35
         
         # 更新显示
         self.renderer.update_display()

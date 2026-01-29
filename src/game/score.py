@@ -30,17 +30,20 @@ class ScoreManager:
         Args:
             fruit (Fruit): 被切割的水果
         """
-        # 增加分数
-        fruit_score = GameConfig.BASE_SCORE_PER_FRUIT
+        # 根据水果类型计算分数
+        if fruit.type == 'watermelon':
+            fruit_score = 20  # 西瓜计20分
+        else:
+            fruit_score = 10  # 其他水果计10分
         
         # 增加连击数
         self.combo += 1
         
-        # 计算连击倍数
-        combo_multiplier = 1 + (self.combo - 1) * GameConfig.COMBO_MULTIPLIER
+        # 计算连击奖励分数
+        combo_bonus = (self.combo - 1) * 5  # 每次连击增加5分
         
         # 计算最终分数
-        final_score = int(fruit_score * combo_multiplier)
+        final_score = fruit_score + combo_bonus
         self.score += final_score
         
         # 更新最大连击数
@@ -63,7 +66,7 @@ class ScoreManager:
         self.reset_combo()
         
         # 检查游戏是否结束
-        if self.missed_fruits >= GameConfig.MAX_MISSED_FRUITS:
+        if self.missed_fruits >= GameConfig.INITIAL_LIVES:
             self.game_over = True
     
     def set_game_duration(self, duration):

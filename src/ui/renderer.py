@@ -89,13 +89,11 @@ class Renderer:
                 right_image = resource_manager.load_image(f"{fruit_type.split('.')[0]}-2.png")
                 
                 if left_image:
-                    # 直接使用原始切片图片，不做放缩处理
                     self.fruit_left_images[fruit_type] = left_image
                 else:
                     self.fruit_left_images[fruit_type] = None
                 
                 if right_image:
-                    # 直接使用原始切片图片，不做放缩处理
                     self.fruit_right_images[fruit_type] = right_image
                 else:
                     self.fruit_right_images[fruit_type] = None
@@ -253,7 +251,7 @@ class Renderer:
         self.layout.draw_bg(self.screen)
         pass
 
-    def render_ui(self, score, combo, missed, game_time):
+    def render_ui(self, score, combo, missed, game_time, game_duration):
         """
         渲染UI元素
         
@@ -262,8 +260,9 @@ class Renderer:
             combo (int): 当前连击数
             missed (int): 错过的水果数
             game_time (float): 游戏时间
+            game_duration (int): 游戏时长
         """
-        self.layout.draw_ui(self.screen, score, combo, missed, game_time)
+        self.layout.draw_ui(self.screen, score, combo, missed, game_time, game_duration)
     
     def render_ready_screen(self):
         """
@@ -282,6 +281,10 @@ class Renderer:
         渲染开始页面
         """
         self.layout.draw_title_screen(self.screen)
+        
+        # 绘制规则覆盖层
+        if self.layout.get_show_rules():
+            self.layout.draw_rules_overlay(self.screen)
     
     def render_countdown_screen(self, countdown):
         """
@@ -300,23 +303,6 @@ class Renderer:
         text = font.render(f'Game Start {countdown}...', True, GameConfig.WHITE)
         rect = text.get_rect(center=(self.width // 2, self.height // 2))
         self.screen.blit(text, rect)
-        
-        # 绘制游戏规则
-        rules_font = font_manager.get_font(30)
-        rules = [
-            'Game Rules:',
-            '1. Use gestures to slice fruits on the screen',
-            '2. Don\'t slice bombs, otherwise you will lose lives',
-            '3. Try to slice fruits consecutively to get combo scores',
-            '4. Game duration is 60 seconds',
-            '5. Good luck!'
-        ]
-        
-        # 绘制规则文本
-        for i, rule in enumerate(rules):
-            rule_text = rules_font.render(rule, True, GameConfig.WHITE)
-            rule_rect = rule_text.get_rect(center=(self.width // 2, self.height // 2 + 100 + i * 40))
-            self.screen.blit(rule_text, rule_rect)
     
     def render_game_over_screen(self, score, max_combo, lives, end_reason):
         """
@@ -393,21 +379,7 @@ class Renderer:
                 preview_size = (100, 133)  # 减小预览窗口大小，提高性能
                 resized_frame = cv2.resize(frame, preview_size)
                 
-                # 绘制手部关键点
-                if self.hand_detector:
-                    # 使用传入的手部检测器实例
-                    # 临时调整检测器的宽度和高度以匹配预览窗口大小
-                    original_width = self.hand_detector.width
-                    original_height = self.hand_detector.height
-                    self.hand_detector.width = preview_size[0]
-                    self.hand_detector.height = preview_size[1]
-                    
-                    # 绘制手部关键点
-                    self.hand_detector.draw_hand_landmarks(resized_frame, hand_landmarks)
-                    
-                    # 恢复原始宽度和高度
-                    self.hand_detector.width = original_width
-                    self.hand_detector.height = original_height
+                # 移除所有识别点，确保干净的视觉呈现
                 
                 # 转换为pygame表面
                 frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)

@@ -325,8 +325,8 @@ class GestureTracker:
             # 计算点的存在时间
             age = current_time - point['timestamp']
             
-            # 透明度随时间衰减，调整为1.5秒后完全消失，更符合刀痕效果
-            max_age = 1.5
+            # 透明度随时间衰减，调整为0.75秒后完全消失，轨迹保留时间缩短一半
+            max_age = 0.75
             if age < max_age:
                 # 使用非线性衰减，使轨迹消失更自然
                 decay_factor = 1.0 - (age / max_age)
@@ -339,8 +339,8 @@ class GestureTracker:
             # 计算点的存在时间
             age = current_time - point['timestamp']
             
-            # 透明度随时间衰减，调整为1.5秒后完全消失，更符合刀痕效果
-            max_age = 1.5
+            # 透明度随时间衰减，调整为0.75秒后完全消失，轨迹保留时间缩短一半
+            max_age = 0.75
             if age < max_age:
                 # 使用非线性衰减，使轨迹消失更自然
                 decay_factor = 1.0 - (age / max_age)
